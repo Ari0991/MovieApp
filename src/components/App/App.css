@@ -1,7 +1,7 @@
 .app {
   margin: 0 auto;
-
-  width: 1010px;
+  max-width: 1010px;
+  min-width: 320px;
   height: auto;
   position: relative;
   padding: 0 36px;
@@ -13,8 +13,19 @@
   position: relative;
   bottom: 0px;
 }
-/* app__tabs
-app__list
-app__search-input
+.app__search-input {
+  margin-top: 0px;
+  margin-bottom: 32px;
+}
 
-app__pagination */
+.app__pagination {
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 450px) {
+  .app {
+    grid-row-gap: 16px;
+    padding: 0 36px;
+  }
+}

@@ -18,11 +18,6 @@ export default class CardItem extends Component {
     this.setState({ error: true });
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.stars !== this.state.stars && localStorage.getItem('sessionID')) {
-      this.sendMovieRate(this.state.stars, this.props.id);
-    }
-  }
   makeAltText(text) {
     return text.split(' ').slice(0, 4).join(' ');
   }
@@ -41,6 +36,7 @@ export default class CardItem extends Component {
 
   onRate = (num) => {
     this.setState({ stars: num });
+    this.sendMovieRate(num, this.props.id);
   };
 
   addGenres(list, ids) {
@@ -76,11 +72,16 @@ export default class CardItem extends Component {
           return (
             <React.Fragment>
               <div className="card">
-                <div className="card__image-container">
-                  {' '}
-                  <img className="card__image" src={picture} alt={this.makeAltText(title)} placeholder={'Loading...'} />
-                </div>
+                <img className="card__image" src={picture} alt={this.makeAltText(title)} placeholder={'Loading...'} />
                 <div className="card__info">
+                  <Progress
+                    className="card__progress"
+                    type="circle"
+                    size={30}
+                    percent={rating * 10}
+                    format={(percent) => percent / 10}
+                    strokeColor={this.useColor(rating)}
+                  />
                   <Title className="card__title" level={5}>
                     {title}
                   </Title>
@@ -91,14 +92,7 @@ export default class CardItem extends Component {
                     </Space>
                   </div>
                   <div className="card__description">{description}</div>
-                  <Progress
-                    className="card__progress"
-                    type="circle"
-                    size={30}
-                    percent={rating * 10}
-                    format={(percent) => percent / 10}
-                    strokeColor={this.useColor(rating)}
-                  />
+
                   <Rate allowHalf count={10} className="card__rate" value={stars} onChange={this.onRate}></Rate>
                 </div>
               </div>

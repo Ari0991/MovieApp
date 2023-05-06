@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Pagination, Input, Spin, Alert, Tabs, Space } from 'antd';
+import { Pagination, Input, Spin, Alert, Tabs } from 'antd';
 import { format } from 'date-fns';
 import { enGB } from 'date-fns/locale/en-GB/index.js';
 import debounce from 'lodash.debounce';
@@ -28,11 +28,9 @@ export default class App extends Component {
     sessionID: localStorage.getItem('sessionID'),
     ratedPage: '1',
     totalRatedPages: '1',
-    starsInfo: null,
   };
 
   componentDidMount() {
-    this.rateStorage = new Map();
     this.getTabs();
 
     const { sessionID, ratedPage } = this.state;
@@ -40,9 +38,9 @@ export default class App extends Component {
       if (!sessionID) {
         movieList.guestSession().then((res) => this.rememberSessionID(res.guest_session_id));
       }
-      if (sessionID) {
-        this.getRatedMovies(sessionID, ratedPage);
-      }
+
+      this.getRatedMovies(sessionID, ratedPage);
+
       movieList.getGenreList().then((res) => this.addGenreList(res));
 
       movieList.getPopularMovies(this.state.page).then((res) => this.getPopularMovies(res));
@@ -67,10 +65,6 @@ export default class App extends Component {
     if (prevState.ratedPage !== this.state.ratedPage) {
       this.getRatedMovies(this.state.sessionID, this.state.ratedPage);
     }
-
-    if (this.state.starsInfo !== prevState.starsInfo && this.state.starsInfo !== null) {
-      movieList.getPopularMovies(this.state.page).then((res) => this.getPopularMovies(res));
-    }
   }
 
   getPopularMovies = (list) => {
@@ -93,20 +87,8 @@ export default class App extends Component {
     });
   };
 
-  addRateToStorage(id, rate) {
-    this.rateStorage.set(id, rate);
-  }
-
   createMovie(item) {
-    const { starsInfo } = this.state;
-
-    let getRate = 0;
-    if (starsInfo) {
-      getRate = starsInfo.get(item.id);
-      console.log(getRate);
-    }
-
-    const rate = item.rating ? item.rating : getRate;
+    const isRated = item.rate ? item.rate : null;
 
     const obj = {
       title: item.title,
@@ -116,7 +98,7 @@ export default class App extends Component {
       rating: Number(item.vote_average.toFixed(1)),
       picture: this.getPicture(item.poster_path),
       id: item.id,
-      stars: rate,
+      stars: isRated,
     };
 
     return obj;
@@ -126,14 +108,25 @@ export default class App extends Component {
     let movieData;
 
     movieData = movieList.getMovies(this.state.value, page);
-
     movieData
       .then((elem) => {
         const { results, total_pages } = elem;
+        const { ratedMovies } = this.state;
         const newMovieList = [];
 
         results.map((movie) => {
-          const newMovie = this.createMovie(movie);
+          const index = ratedMovies.findIndex((elem) => movie.id === elem.id);
+          let item;
+          if (index > 0) {
+            item = ratedMovies[index];
+          }
+          const movieWithRate = structuredClone(movie);
+
+          if (item) {
+            const rate = item.rating;
+            movieWithRate.rate = rate;
+          }
+          const newMovie = this.createMovie(movieWithRate);
           newMovieList.push(newMovie);
         });
 
@@ -159,19 +152,19 @@ export default class App extends Component {
   }
 
   cutDescription(text, genres) {
-    if (text.length > 150) {
+    if (text.length > 180) {
       if (genres.length < 3) {
-        let cutText = text.slice(0, 200).split(' ');
+        let cutText = text.slice(0, 160).split(' ');
         cutText.pop();
         cutText = cutText.join(' ');
         return cutText + ' ...';
-      } else if (genres.length <= 4) {
-        let cutText = text.slice(0, 130).split(' ');
+      } else if (genres.length >= 5) {
+        let cutText = text.slice(0, 110).split(' ');
         cutText.pop();
         cutText = cutText.join(' ');
         return cutText + ' ...';
       } else {
-        let cutText = text.slice(0, 100).split(' ');
+        let cutText = text.slice(0, 140).split(' ');
         cutText.pop();
         cutText = cutText.join(' ');
         return cutText + ' ...';
@@ -242,28 +235,26 @@ export default class App extends Component {
   getRatedMovies = async (id, pageNum) => {
     const ratedList = await movieList.getRatedMovies(id, pageNum);
     const { results, page, total_pages } = ratedList;
+    this.addRatedMovies(results);
 
-    const addMovie = this.addRatedMovies(results);
-    this.setState({ ratedMovies: addMovie, ratedPage: page, totalRatedPages: total_pages });
+    this.setState({ ratedPage: page, totalRatedPages: total_pages });
   };
 
-  addRatedMovies = (list) => {
-    const movieList = [];
-
-    list.map((movie) => {
-      const { id, rating } = movie;
-      this.addRateToStorage(id, rating);
-      const newMovie = this.createMovie(movie);
-      movieList.push(newMovie);
+  addRatedMovies(list) {
+    let newMovieList = [];
+    list.map((elem) => {
+      const createdElem = this.createMovie(elem);
+      newMovieList.push(createdElem);
     });
-    this.setState({ starsInfo: this.rateStorage });
-    return movieList;
-  };
+    this.setState({ ratedMovies: newMovieList });
+  }
 
   render() {
-    const { load, error, movies, page, totalPages, ratedPage, ratedMovies, genreList, totalRatedPages, starsInfo } =
+    const { load, error, movies, page, totalPages, ratedMovies, genreList, starsInfo, ratedPage, totalRatedPages } =
       this.state;
     const context = { genreList, movieList, starsInfo, ratedMovies };
+
+    console.log(this.state);
 
     const isError = error ? <Alert message="Warning! Something is wrong. " type="error" showIcon closable /> : null;
     const isLoad = load ? (
@@ -284,7 +275,6 @@ export default class App extends Component {
           <div className="app__search-input">
             <Input required placeholder={'Type to search'} onChange={debounce(this.changeSearchQuery, 600)} />
           </div>
-          <Space />
           {isError}
           {isLoad}
           {isEmpty}
