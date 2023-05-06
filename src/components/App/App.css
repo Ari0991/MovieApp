@@ -1,0 +1,20 @@
+.app {
+  margin: 0 auto;
+
+  width: 1010px;
+  height: auto;
+  position: relative;
+  padding: 0 36px;
+  background-color: #fff;
+}
+
+.app__pagination {
+  text-align: center;
+  position: relative;
+  bottom: 0px;
+}
+/* app__tabs
+app__list
+app__search-input
+
+app__pagination */

@@ -1,0 +1,47 @@
+.card {
+  display: flex;
+  height: 281px;
+  width: 454px;
+  flex-wrap: wrap;
+  margin: 15px;
+  box-shadow: 1px 1px 3px 1px grey;
+}
+
+.card__image-container {
+  width: 160px;
+  height: 243px;
+  object-fit: cover;
+}
+.card__image {
+  width: 160px;
+  height: 243px;
+  object-fit: cover;
+}
+
+.card__info {
+  padding: 12px 20px;
+  position: relative;
+  font-family: 'PT Sans', sans-serif;
+  background-color: white;
+  width: 270px;
+  height: 28px;
+}
+/*  
+.card__date {
+  padding-left: 20px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #827e7e;
+} */
+/* 
+@media (max-width: 900px) {
+}
+
+@media (max-width: 450px) {
+  .card__image {
+    width: 76px;
+    height: 114px;
+    max-width: 100%;
+    max-height: 100%;
+  }
+} */
