@@ -18,6 +18,11 @@ export default class CardItem extends Component {
     this.setState({ error: true });
   }
 
+  // componentDidUpdate(prevProps, prevState) {
+  //   if (prevState.stars !== this.state.stars) {
+  //   }
+  // }
+
   makeAltText(text) {
     return text.split(' ').slice(0, 4).join(' ');
   }
@@ -36,6 +41,7 @@ export default class CardItem extends Component {
 
   onRate = (num) => {
     this.setState({ stars: num });
+
     this.sendMovieRate(num, this.props.id);
   };
 
@@ -56,13 +62,12 @@ export default class CardItem extends Component {
   };
 
   render() {
-    const { title, tags, description, picture, date, rating } = this.props;
-    const { stars } = this.state;
+    const { title, tags, description, picture, date, rating, stars } = this.props;
     return (
       <MovieConsumer>
-        {({ genreList, movieList }) => {
+        {({ genreList, movieList, updateRate }) => {
           this.movieList = movieList;
-
+          this.updateRate = updateRate;
           const tagList = this.addGenres(genreList, tags);
           const tagView = tagList.map((elem) => {
             return <Tag key={elem + this.state.id}>{elem}</Tag>;

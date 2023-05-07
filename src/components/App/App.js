@@ -65,6 +65,10 @@ export default class App extends Component {
     if (prevState.ratedPage !== this.state.ratedPage) {
       this.getRatedMovies(this.state.sessionID, this.state.ratedPage);
     }
+
+    if (this.state.ratedMovies !== prevState.ratedMovies) {
+      movieList.getPopularMovies(this.state.page).then((res) => this.getPopularMovies(res));
+    }
   }
 
   getPopularMovies = (list) => {
@@ -74,11 +78,24 @@ export default class App extends Component {
     }
     const newMovieList = [];
 
+    const { ratedMovies } = this.state;
+
     results.map((movie) => {
-      const newMovie = this.createMovie(movie);
+      const index = ratedMovies.findIndex((elem) => elem.id === movie.id);
+      let item;
+      if (index > 0) {
+        item = ratedMovies[index];
+      }
+
+      const movieWithRate = structuredClone(movie);
+
+      if (item) {
+        const rating = item.stars;
+        movieWithRate.rating = rating;
+      }
+      const newMovie = this.createMovie(movieWithRate);
       newMovieList.push(newMovie);
     });
-
     this.setState({
       movies: newMovieList,
       load: false,
@@ -88,8 +105,6 @@ export default class App extends Component {
   };
 
   createMovie(item) {
-    const isRated = item.rate ? item.rate : null;
-
     const obj = {
       title: item.title,
       date: this.convertDate(item.release_date),
@@ -98,7 +113,7 @@ export default class App extends Component {
       rating: Number(item.vote_average.toFixed(1)),
       picture: this.getPicture(item.poster_path),
       id: item.id,
-      stars: isRated,
+      stars: item.rating,
     };
 
     return obj;
@@ -123,9 +138,10 @@ export default class App extends Component {
           const movieWithRate = structuredClone(movie);
 
           if (item) {
-            const rate = item.rating;
-            movieWithRate.rate = rate;
+            const rating = item.stars;
+            movieWithRate.rating = rating;
           }
+
           const newMovie = this.createMovie(movieWithRate);
           newMovieList.push(newMovie);
         });
@@ -242,20 +258,17 @@ export default class App extends Component {
 
   addRatedMovies(list) {
     let newMovieList = [];
-    list.map((elem) => {
-      const createdElem = this.createMovie(elem);
-      newMovieList.push(createdElem);
+    list.map((movie) => {
+      const newMovie = this.createMovie(movie);
+      newMovieList.push(newMovie);
+      this.setState({ ratedMovies: newMovieList });
     });
-    this.setState({ ratedMovies: newMovieList });
   }
 
   render() {
-    const { load, error, movies, page, totalPages, ratedMovies, genreList, starsInfo, ratedPage, totalRatedPages } =
-      this.state;
-    const context = { genreList, movieList, starsInfo, ratedMovies };
+    const { load, error, movies, page, totalPages, ratedMovies, genreList, ratedPage, totalRatedPages } = this.state;
 
-    console.log(this.state);
-
+    const context = { genreList, movieList };
     const isError = error ? <Alert message="Warning! Something is wrong. " type="error" showIcon closable /> : null;
     const isLoad = load ? (
       <Spin tip="Loading...">

@@ -1,9 +1,8 @@
 export default class MovieServise {
   constructor() {
     this._baseUrl = 'https://api.themoviedb.org/3';
-    this._apiKey = '9420f971c77382011b10789475bfd7fa';
+    this._apiKey = '636c0c0b02f087caae4fc8bbe451fc61';
   }
-  // 636c0c0b02f087caae4fc8bbe451fc61
 
   async getResourse(url) {
     const res = await fetch(url);
