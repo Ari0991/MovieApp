@@ -82,8 +82,9 @@ export default class App extends Component {
 
     results.map((movie) => {
       const index = ratedMovies.findIndex((elem) => elem.id === movie.id);
+
       let item;
-      if (index > 0) {
+      if (index > -1) {
         item = ratedMovies[index];
       }
 
@@ -132,7 +133,7 @@ export default class App extends Component {
         results.map((movie) => {
           const index = ratedMovies.findIndex((elem) => movie.id === elem.id);
           let item;
-          if (index > 0) {
+          if (index > -1) {
             item = ratedMovies[index];
           }
           const movieWithRate = structuredClone(movie);

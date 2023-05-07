@@ -18,11 +18,6 @@ export default class CardItem extends Component {
     this.setState({ error: true });
   }
 
-  // componentDidUpdate(prevProps, prevState) {
-  //   if (prevState.stars !== this.state.stars) {
-  //   }
-  // }
-
   makeAltText(text) {
     return text.split(' ').slice(0, 4).join(' ');
   }
@@ -63,6 +58,7 @@ export default class CardItem extends Component {
 
   render() {
     const { title, tags, description, picture, date, rating, stars } = this.props;
+
     return (
       <MovieConsumer>
         {({ genreList, movieList, updateRate }) => {
