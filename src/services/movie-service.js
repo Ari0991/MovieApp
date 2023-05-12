@@ -52,7 +52,6 @@ export default class MovieServise {
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: JSON.stringify(body),
     }).catch((err) => {
-      console.error(`Error with send request, type 'add rate': ${err.name}`);
       throw new Error(`Status code: ${err.name}`);
     });
   }
@@ -63,7 +62,6 @@ export default class MovieServise {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
     }).catch((err) => {
-      console.error(`Error with send delete request, type 'delete rate': ${err.name}`);
       throw new Error(`Status code: ${err.name}`);
     });
   }
