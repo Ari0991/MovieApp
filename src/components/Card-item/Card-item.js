@@ -55,7 +55,7 @@ export default class CardItem extends Component {
   };
 
   render() {
-    const { title, description, picture, date, rating, stars, tags, genreList } = this.props;
+    const { title, description, picture, date, rating, tags, genreList, stars } = this.props;
 
     const tagList = this.addGenres(genreList, tags);
     const tagView = tagList.map((elem) => {
