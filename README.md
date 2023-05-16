@@ -1,4 +1,4 @@
 # movieApp
 
 movie App
-https://movie-app-rho-ebon.vercel.app/
+https://movie-app-ari0991.vercel.app/
