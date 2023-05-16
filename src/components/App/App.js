@@ -3,8 +3,9 @@ import { Pagination, Input, Spin, Alert, Tabs } from 'antd';
 import debounce from 'lodash.debounce';
 
 import MovieServise from '../../services/movie-service.js';
-import { MovieProvider } from '../../services/movie-service-context.js';
+import { MovieProvider, MovieConsumer } from '../../services/movie-service-context.js';
 import CardList from '../Card-list/Card-list.js';
+import ErrorBoundary from '../Error-boundary/Error-boundary.js';
 
 import './App.css';
 
@@ -36,14 +37,24 @@ export default class App extends Component {
 
     this.getRatedMovies(sessionID, ratedPage);
 
-    movieList.getGenreList().then((res) => this.addGenreList(res));
+    movieList
+      .getGenreList()
+      .then((res) => this.addGenreList(res))
+      .catch(() => this.onError);
 
-    movieList.getPopularMovies(this.state.page).then((res) => this.getPopularMovies(res));
+    movieList
+      .getPopularMovies(this.state.page)
+      .then((res) => this.getPopularMovies(res))
+      .catch(() => this.onError);
   }
 
-  componentDidCatch() {
-    this.setState({ error: true });
-  }
+  // componentDidCatch() {
+  //   this.onError;
+  // }
+
+  // static getDerivedStateFromError() {
+  //   this.setState({ error: true, load: false });
+  // }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.value !== this.state.value) {
@@ -123,7 +134,6 @@ export default class App extends Component {
             const rating = item.rating;
             movieWithRate.rating = rating;
           }
-          console.log(movieWithRate);
           newMovieList.push(movieWithRate);
         });
 
@@ -181,11 +191,15 @@ export default class App extends Component {
   };
 
   getRatedMovies = async (id, pageNum) => {
-    const ratedList = await movieList.getRatedMovies(id, pageNum);
-    const { results, page, total_pages } = ratedList;
-    this.addRatedMovies(results);
+    try {
+      const ratedList = await movieList.getRatedMovies(id, pageNum);
+      const { results, page, total_pages } = ratedList;
+      this.addRatedMovies(results);
 
-    this.setState({ ratedPage: page, totalRatedPages: total_pages });
+      this.setState({ ratedPage: page, totalRatedPages: total_pages });
+    } catch (err) {
+      this.onError();
+    }
   };
 
   addRatedMovies(list) {
@@ -212,13 +226,17 @@ export default class App extends Component {
       },
     ];
 
-    const isError = error ? <Alert message="Warning! Something is wrong. " type="error" showIcon closable /> : null;
+    // const isError = error ? <Alert message="Warning! Something is wrong. " type="error" showIcon closable /> : null;
     const isLoad = load ? (
       <Spin tip="Loading...">
         <Alert message="Loading movie list" description="Please, wait" type="info" />
       </Spin>
     ) : (
-      <CardList props={movies} />
+      <MovieConsumer>
+        {({ genreList, movieList, sessionID }) => {
+          return <CardList props={movies} genreList={genreList} movieList={movieList} sessionID={sessionID} />;
+        }}
+      </MovieConsumer>
     );
     const isEmpty =
       !load && !error && movies.length === 0 ? (
@@ -231,7 +249,7 @@ export default class App extends Component {
           <div className="app__search-input">
             <Input required placeholder={'Type to search'} onChange={debounce(this.changeSearchQuery, 600)} />
           </div>
-          {isError}
+          {/* {isError} */}
           {isLoad}
           {isEmpty}
           <Pagination
@@ -244,7 +262,13 @@ export default class App extends Component {
         </React.Fragment>
       ) : (
         <React.Fragment>
-          <CardList props={ratedMovies} />
+          <MovieConsumer>
+            {({ genreList, movieList, sessionID }) => {
+              return <CardList props={ratedMovies} genreList={genreList} movieList={movieList} sessionID={sessionID} />;
+            }}
+          </MovieConsumer>
+          {isLoad}
+          {isEmpty}
           <Pagination
             className="app__pagination"
             defaultCurrent={ratedPage}
@@ -275,7 +299,7 @@ export default class App extends Component {
       <Alert message="Network Error" description="Offline error. Failed to load application" type="error" />
     );
 
-    return <React.Fragment>{isOnline}</React.Fragment>;
+    return <ErrorBoundary>{isOnline}</ErrorBoundary>;
   }
   static defaultProps = {};
 }

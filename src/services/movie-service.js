@@ -69,7 +69,9 @@ export default class MovieServise {
   async getPopularMovies(page) {
     const popularList = await this.getResourse(
       `${this._baseUrl}/movie/popular?api_key=${this._apiKey}&language=en-US&page=${page}`
-    );
+    ).catch((err) => {
+      throw new Error(`Status code: ${err.name}`);
+    });
     return popularList;
   }
 }
