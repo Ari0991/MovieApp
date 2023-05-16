@@ -5,7 +5,6 @@ import debounce from 'lodash.debounce';
 import MovieServise from '../../services/movie-service.js';
 import { MovieProvider, MovieConsumer } from '../../services/movie-service-context.js';
 import CardList from '../Card-list/Card-list.js';
-import ErrorBoundary from '../Error-boundary/Error-boundary.js';
 
 import './App.css';
 
@@ -32,7 +31,12 @@ export default class App extends Component {
     const { sessionID, ratedPage } = this.state;
 
     if (!sessionID) {
-      movieList.guestSession().then((res) => this.rememberSessionID(res.guest_session_id));
+      movieList
+        .guestSession()
+        .then((res) => this.rememberSessionID(res.guest_session_id))
+        .catch(() => {
+          this.onError;
+        });
     }
 
     this.getRatedMovies(sessionID, ratedPage);
@@ -48,13 +52,9 @@ export default class App extends Component {
       .catch(() => this.onError);
   }
 
-  // componentDidCatch() {
-  //   this.onError;
-  // }
-
-  // static getDerivedStateFromError() {
-  //   this.setState({ error: true, load: false });
-  // }
+  static getDerivedStateFromError() {
+    this.setState({ error: true, load: false });
+  }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.value !== this.state.value) {
@@ -74,7 +74,10 @@ export default class App extends Component {
     }
 
     if (this.state.ratedMovies !== prevState.ratedMovies) {
-      movieList.getPopularMovies(this.state.page).then((res) => this.getPopularMovies(res));
+      movieList
+        .getPopularMovies(this.state.page)
+        .then((res) => this.getPopularMovies(res))
+        .catch(() => this.onError());
     }
   }
 
@@ -213,6 +216,7 @@ export default class App extends Component {
   render() {
     const { load, error, movies, page, totalPages, ratedMovies, genreList, ratedPage, totalRatedPages, sessionID } =
       this.state;
+
     const context = { genreList, movieList, sessionID };
 
     const items = [
@@ -226,7 +230,6 @@ export default class App extends Component {
       },
     ];
 
-    // const isError = error ? <Alert message="Warning! Something is wrong. " type="error" showIcon closable /> : null;
     const isLoad = load ? (
       <Spin tip="Loading...">
         <Alert message="Loading movie list" description="Please, wait" type="info" />
@@ -243,13 +246,15 @@ export default class App extends Component {
         <Alert message="Empty movie list" description="There is no movies, please, try again" type="info" />
       ) : null;
 
+    const isError = error ? <Alert message="Warning! Something is wrong. " type="error" showIcon closable /> : null;
+
     const activeTab =
       this.state.tab === 'search' ? (
         <React.Fragment>
           <div className="app__search-input">
             <Input required placeholder={'Type to search'} onChange={debounce(this.changeSearchQuery, 600)} />
           </div>
-          {/* {isError} */}
+          {isError}
           {isLoad}
           {isEmpty}
           <Pagination
@@ -267,6 +272,7 @@ export default class App extends Component {
               return <CardList props={ratedMovies} genreList={genreList} movieList={movieList} sessionID={sessionID} />;
             }}
           </MovieConsumer>
+          {isError}
           {isLoad}
           {isEmpty}
           <Pagination
@@ -299,7 +305,7 @@ export default class App extends Component {
       <Alert message="Network Error" description="Offline error. Failed to load application" type="error" />
     );
 
-    return <ErrorBoundary>{isOnline}</ErrorBoundary>;
+    return <React.Fragment>{isOnline}</React.Fragment>;
   }
   static defaultProps = {};
 }

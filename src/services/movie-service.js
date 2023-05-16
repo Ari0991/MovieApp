@@ -4,12 +4,15 @@ export default class MovieServise {
     this._apiKey = '636c0c0b02f087caae4fc8bbe451fc61';
   }
 
+  // this._apiKey = '636c0c0b02f087caae4fc8bbe451fc61';
+
   async getResourse(url) {
     const res = await fetch(url);
 
     if (!res.ok) {
       throw new Error(`Status code: ${res.status}`);
     }
+
     const data = await res.json();
     return data;
   }
