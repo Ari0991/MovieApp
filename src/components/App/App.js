@@ -3,7 +3,7 @@ import { Pagination, Input, Spin, Alert, Tabs } from 'antd';
 import debounce from 'lodash.debounce';
 
 import MovieServise from '../../services/movie-service.js';
-import { MovieProvider, MovieConsumer } from '../../services/movie-service-context.js';
+import { MovieProvider } from '../../services/movie-service-context.js';
 import CardList from '../Card-list/Card-list.js';
 
 import './App.css';
@@ -235,12 +235,9 @@ export default class App extends Component {
         <Alert message="Loading movie list" description="Please, wait" type="info" />
       </Spin>
     ) : (
-      <MovieConsumer>
-        {({ genreList, movieList, sessionID }) => {
-          return <CardList props={movies} genreList={genreList} movieList={movieList} sessionID={sessionID} />;
-        }}
-      </MovieConsumer>
+      <CardList props={movies} genreList={genreList} movieList={movieList} sessionID={sessionID} />
     );
+
     const isEmpty =
       !load && !error && movies.length === 0 ? (
         <Alert message="Empty movie list" description="There is no movies, please, try again" type="info" />
@@ -267,12 +264,7 @@ export default class App extends Component {
         </React.Fragment>
       ) : (
         <React.Fragment>
-          <MovieConsumer>
-            {({ genreList, movieList, sessionID }) => {
-              return <CardList props={ratedMovies} genreList={genreList} movieList={movieList} sessionID={sessionID} />;
-            }}
-          </MovieConsumer>
-          {isError}
+          <CardList props={ratedMovies} genreList={genreList} movieList={movieList} sessionID={sessionID} />;{isError}
           {isLoad}
           {isEmpty}
           <Pagination
