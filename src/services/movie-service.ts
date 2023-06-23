@@ -1,12 +1,12 @@
 export default class MovieServise {
+  _baseUrl: string;
+  _apiKey: string;
+
   constructor() {
     this._baseUrl = 'https://api.themoviedb.org/3';
     this._apiKey = '636c0c0b02f087caae4fc8bbe451fc61';
   }
-
-  // this._apiKey = '636c0c0b02f087caae4fc8bbe451fc61';
-
-  async getResourse(url) {
+  async getResourse(url: string) {
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -29,7 +29,7 @@ export default class MovieServise {
     return guestSession;
   }
 
-  async getRatedMovies(sessionID, page = 1) {
+  async getRatedMovies(sessionID: string, page = 1) {
     const url = `${this._baseUrl}/guest_session/${sessionID}/rated/movies?api_key=${this._apiKey}&page=${page}`;
 
     const ratedMovies = this.getResourse(url);
@@ -42,7 +42,7 @@ export default class MovieServise {
     return genreList;
   }
 
-  async sendMovieRate(movieID, sessionID, rate) {
+  async sendMovieRate(movieID: string, sessionID: string, rate: number) {
     const url = `${this._baseUrl}/movie/${movieID}/rating?api_key=${this._apiKey}&guest_session_id=${sessionID}`;
 
     const body = {
@@ -59,7 +59,7 @@ export default class MovieServise {
     });
   }
 
-  async deleteRateMovie(movieID, sessionID) {
+  async deleteRateMovie(movieID: string, sessionID: string) {
     const url = `${this._baseUrl}/movie/${movieID}/rating?api_key=${this._apiKey}&guest_session_id=${sessionID}`;
     await fetch(url, {
       method: 'DELETE',
@@ -69,7 +69,7 @@ export default class MovieServise {
     });
   }
 
-  async getPopularMovies(page) {
+  async getPopularMovies(page: number) {
     const popularList = await this.getResourse(
       `${this._baseUrl}/movie/popular?api_key=${this._apiKey}&language=en-US&page=${page}`
     ).catch((err) => {

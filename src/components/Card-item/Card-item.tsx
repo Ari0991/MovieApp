@@ -1,22 +1,40 @@
 import React, { Component } from 'react';
 import { Typography, Rate, Progress, Space, Tag } from 'antd';
-import PropTypes from 'prop-types';
 
 import './Card-item.css';
 
 const { Title } = Typography;
 
-export default class CardItem extends Component {
+type State = {
+  stars: number;
+  sessionID: string | null;
+};
+
+type Props = {
+  title: string;
+  tags: string[];
+  description: string;
+  picture: string;
+  id: number;
+  date: string;
+  rating: number;
+  genreList: { id: string; name: string }[];
+  stars: number;
+  sessionID: string | null;
+  MovieList?: any;
+};
+
+export default class CardItem extends Component<Props, State> {
   state = {
     stars: this.props.stars,
     sessionID: this.props.sessionID,
   };
 
-  makeAltText(text) {
+  makeAltText(text: string) {
     return text.split(' ').slice(0, 4).join(' ');
   }
 
-  useColor(num) {
+  useColor(num: number) {
     if (num < 4) {
       return '#E90000';
     } else if (num < 6) {
@@ -28,24 +46,24 @@ export default class CardItem extends Component {
     }
   }
 
-  onRate = (num) => {
+  onRate = (num: number) => {
     const { id } = this.props;
     const { sessionID } = this.state;
     this.setState({ stars: num });
 
-    this.sendMovieRate(num, id, sessionID);
+    this.sendMovieRate(num, id.toString(), sessionID!);
   };
 
-  addGenres(list, ids) {
-    const tags = [];
+  addGenres(list: { id: string; name: string }[], ids: string[]) {
+    const tags: any = [];
     for (let id of ids) {
       list.forEach((elem) => (elem.id === id ? tags.push(elem.name) : null));
     }
     return tags;
   }
 
-  sendMovieRate = (rate, movieID, sessionID) => {
-    const { movieList } = this.props;
+  sendMovieRate = (rate: number, movieID: string, sessionID: string) => {
+    const movieList: any = this.props.MovieList;
 
     if (rate > 0) {
       movieList.sendMovieRate(movieID, sessionID, rate);
@@ -58,8 +76,8 @@ export default class CardItem extends Component {
     const { title, description, picture, date, rating, tags, genreList, stars } = this.props;
 
     const tagList = this.addGenres(genreList, tags);
-    const tagView = tagList.map((elem) => {
-      return <Tag key={elem + this.state.id}>{elem}</Tag>;
+    const tagView = tagList.map((elem: any) => {
+      return <Tag key={elem + this.state.sessionID}>{elem}</Tag>;
     });
     const haveGenres = tagList.length > 0 ? tagView : <Tag>No genres</Tag>;
 
@@ -73,7 +91,7 @@ export default class CardItem extends Component {
               type="circle"
               size={30}
               percent={rating * 10}
-              format={(percent) => percent / 10}
+              format={(percent) => Number(percent) / 10}
               strokeColor={this.useColor(rating)}
             />
             <Title className="card__title" level={5}>
@@ -97,20 +115,11 @@ export default class CardItem extends Component {
   // }
 
   static defaultProps = {
+    movieList: [],
     title: '',
     tags: ['Genres not found'],
     description: 'No description',
     date: 'Unknown date',
     rating: 0,
-  };
-
-  static propTypes = {
-    title: PropTypes.string,
-    // tags: PropTypes.arrayOf(PropTypes.string),
-    description: PropTypes.string,
-    picture: PropTypes.string,
-    id: PropTypes.number,
-    date: PropTypes.string,
-    rating: PropTypes.number,
   };
 }

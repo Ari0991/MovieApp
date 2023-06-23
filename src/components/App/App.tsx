@@ -2,15 +2,44 @@ import React, { Component } from 'react';
 import { Pagination, Input, Spin, Alert, Tabs } from 'antd';
 import debounce from 'lodash.debounce';
 
-import MovieServise from '../../services/movie-service.js';
-import { MovieProvider } from '../../services/movie-service-context.js';
-import CardList from '../Card-list/Card-list.js';
+import MovieServise from '../../services/movie-service';
+import { MovieProvider } from '../../services/movie-service-context';
+import CardList from '../Card-list/Card-list/Card-list';
 
 import './App.css';
 
 const movieList = new MovieServise();
 
-export default class App extends Component {
+type TMovie = {
+  id: string;
+  rating?: string;
+  title: string;
+  tags?: string[];
+  description?: string;
+  picture?: string;
+  date?: string;
+  genreList?: { id: string; name: string }[];
+  stars?: number;
+  sessionID?: string | null;
+};
+
+type TState = {
+  value: string;
+  genreList: any | undefined;
+  movies: TMovie[] | [];
+  ratedMovies: TMovie[] | [];
+  load: boolean;
+  error: boolean;
+  popular: boolean;
+  page: number;
+  totalPages: number;
+  tab: string;
+  sessionID: string | null;
+  ratedPage: number;
+  totalRatedPages: number;
+};
+
+export default class App extends Component<{}, TState> {
   state = {
     value: '',
     genreList: [],
@@ -19,12 +48,12 @@ export default class App extends Component {
     load: true,
     error: false,
     popular: false,
-    page: '1',
-    totalPages: '1',
+    page: 1,
+    totalPages: 1,
     tab: 'search',
     sessionID: localStorage.getItem('sessionID'),
-    ratedPage: '1',
-    totalRatedPages: '1',
+    ratedPage: 1,
+    totalRatedPages: 1,
   };
 
   componentDidMount() {
@@ -39,7 +68,7 @@ export default class App extends Component {
         });
     }
 
-    this.getRatedMovies(sessionID, ratedPage);
+    this.getRatedMovies(sessionID!, ratedPage);
 
     movieList
       .getGenreList()
@@ -52,11 +81,11 @@ export default class App extends Component {
       .catch(() => this.onError);
   }
 
-  static getDerivedStateFromError() {
-    this.setState({ error: true, load: false });
-  }
+  // static getDerivedStateFromError() {
+  //   this.setState({ error: true, load: false });
+  // }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps: [], prevState: TState) {
     if (prevState.value !== this.state.value) {
       this.setState({ load: true });
       this.addMovie(this.state.page);
@@ -70,7 +99,7 @@ export default class App extends Component {
       movieList.getPopularMovies(this.state.page).then((res) => this.getPopularMovies(res));
     }
     if (prevState.ratedPage !== this.state.ratedPage) {
-      this.getRatedMovies(this.state.sessionID, this.state.ratedPage);
+      this.getRatedMovies(this.state.sessionID!, this.state.ratedPage);
     }
 
     if (this.state.ratedMovies !== prevState.ratedMovies) {
@@ -81,24 +110,24 @@ export default class App extends Component {
     }
   }
 
-  getPopularMovies = (list) => {
+  getPopularMovies = (list: { results: []; total_pages: number }) => {
     let { results, total_pages } = list;
     if (total_pages > 500) {
       total_pages = 500;
     }
-    const newMovieList = [];
+    const newMovieList: any = [];
 
     const { ratedMovies } = this.state;
 
-    results.map((movie) => {
-      const index = ratedMovies.findIndex((elem) => elem.id === movie.id);
+    results.map((movie: TMovie) => {
+      const index = ratedMovies.findIndex((elem: TMovie) => elem.id === movie.id);
 
-      let item;
+      let item: TMovie | undefined;
       if (index > -1) {
         item = ratedMovies[index];
       }
 
-      const movieWithRate = structuredClone(movie);
+      const movieWithRate: TMovie = structuredClone(movie);
 
       if (item) {
         const rating = item.rating;
@@ -114,18 +143,18 @@ export default class App extends Component {
     });
   };
 
-  addMovie(page) {
+  addMovie(page: number) {
     let movieData;
     movieData = movieList.getMovies(this.state.value, page);
     movieData
       .then((elem) => {
         const { results, total_pages } = elem;
         const { ratedMovies } = this.state;
-        const newMovieList = [];
+        const newMovieList: any = [];
 
-        results.map((movie) => {
-          const index = ratedMovies.findIndex((elem) => movie.id === elem.id);
-          let item;
+        results.map((movie: TMovie) => {
+          const index = ratedMovies.findIndex((elem: { id: string }) => movie.id === elem.id);
+          let item: any;
 
           if (index > -1) {
             item = ratedMovies[index];
@@ -154,7 +183,7 @@ export default class App extends Component {
     this.setState({ error: true, load: false });
   };
 
-  changeSearchQuery = (evt) => {
+  changeSearchQuery = (evt: any) => {
     if (evt.target.value.trim() !== '') {
       this.setState({
         value: evt.target.value,
@@ -163,37 +192,37 @@ export default class App extends Component {
     this.addMovie(this.state.page);
   };
 
-  changePagination = (clickPage) => {
+  changePagination = (clickPage: number) => {
     this.setState({ page: clickPage });
   };
 
-  changeRatedPagination = (clickPage) => {
+  changeRatedPagination = (clickPage: number) => {
     this.setState({ ratedPage: clickPage });
   };
 
-  onTabChange = (key) => {
+  onTabChange = (key: string) => {
     const { sessionID, ratedPage, page } = this.state;
     if (key === '2') {
       this.setState({ tab: 'rated' });
-      this.getRatedMovies(sessionID, ratedPage);
+      this.getRatedMovies(sessionID!, ratedPage);
     } else {
       this.setState({ tab: 'search' });
       movieList.getPopularMovies(page).then((res) => this.getPopularMovies(res));
     }
   };
 
-  rememberSessionID = (id) => {
+  rememberSessionID = (id: string) => {
     if (!localStorage.getItem('sessionID')) {
       localStorage.setItem('sessionID', id);
       this.setState({ sessionID: id });
     }
   };
-  addGenreList = (list) => {
+  addGenreList = (list: { genres: [] }) => {
     const { genres } = list;
     this.setState({ genreList: genres });
   };
 
-  getRatedMovies = async (id, pageNum) => {
+  getRatedMovies = async (id: string, pageNum: number) => {
     try {
       const ratedList = await movieList.getRatedMovies(id, pageNum);
       const { results, page, total_pages } = ratedList;
@@ -205,8 +234,8 @@ export default class App extends Component {
     }
   };
 
-  addRatedMovies(list) {
-    let newMovieList = [];
+  addRatedMovies(list: []) {
+    let newMovieList: any[] = [];
     list.map((movie) => {
       newMovieList.push(movie);
       this.setState({ ratedMovies: newMovieList });
@@ -217,7 +246,7 @@ export default class App extends Component {
     const { load, error, movies, page, totalPages, ratedMovies, genreList, ratedPage, totalRatedPages, sessionID } =
       this.state;
 
-    const context = { genreList, movieList, sessionID };
+    const context: any = { genreList, movieList, sessionID };
 
     const items = [
       {
